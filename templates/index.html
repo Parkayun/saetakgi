@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}사용자{% end %}
+
+{% block head %}
+{% end %}
+
+
+{% block body %}
+<span id="status">세탁기 연결중</span>
+{% end %}
+
+{% block script %}
+<script type="text/javascript">
+var url = "ws://" + location.host + "/w";
+var ws = new WebSocket(url);
+
+ws.onmessage = function(event) {
+    if (event.data == 'done') {
+        $('#status').html('세탁기 사용 완료');
+    } else if (event.data == 'start') {
+        $('#status').html('세탁기 가동중');
+    }
+}
+
+
+data = {'type': 'register', 'who': 'subscriber', 'saetakgi': '1'};
+
+function wait_for_socket_connection(socket, callback){
+
+    setTimeout(
+        function(){
+            if (socket.readyState === 1) {
+                if(callback !== undefined){
+                    callback();
+                }
+                return;
+
+            } else {
+
+                console.log("... waiting for web socket connection to come online");
+
+                wait_for_socket_connection(socket,callback);
+            }
+        }, 5);
+};
+
+wait_for_socket_connection(ws, function() {
+    ws.send(JSON.stringify(data));
+});
+</script>
+{% end %}
